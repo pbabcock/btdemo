@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import struct
 import bluetooth._bluetooth as bluez
 
@@ -150,4 +151,6 @@ if mode != 1:
         print "error while setting inquiry mode"
     print "result: %d" % result
 
-device_inquiry_with_with_rssi(sock)
+while(True):
+    device_inquiry_with_with_rssi(sock)
+    time.sleep(5)
