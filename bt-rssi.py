@@ -85,6 +85,7 @@ def device_inquiry_with_with_rssi(sock):
     bluez.hci_send_cmd(sock, bluez.OGF_LINK_CTL, bluez.OCF_INQUIRY, cmd_pkt)
 
     results = []
+    readytopay = {}
 
     done = False
     while not done:
@@ -97,7 +98,17 @@ def device_inquiry_with_with_rssi(sock):
                 addr = bluez.ba2str( pkt[1+6*i:1+6*i+6] )
                 rssi = struct.unpack("b", pkt[1+13*nrsp+i])[0]
                 results.append( ( addr, rssi ) )
-                print "[%s] RSSI: [%d]" % (addr, rssi)
+                if rssi > -35:
+                    readytopay[addr] = rssi
+                    print "Device: " + str(addr) + "is ready to pay: " + str(rssi)
+                else:
+                    print "[%s] RSSI: [%d]" % (addr, rssi)
+            
+            if len(readytopay) > 0:
+                print "Number of devices ready to pay: " + str(len(readytopay))
+                done = True
+                break
+
         elif event == bluez.EVT_INQUIRY_COMPLETE:
             done = True
         elif event == bluez.EVT_CMD_STATUS:
@@ -112,7 +123,7 @@ def device_inquiry_with_with_rssi(sock):
             for i in range(nrsp):
                 addr = bluez.ba2str( pkt[1+6*i:1+6*i+6] )
                 results.append( ( addr, -1 ) )
-                print "[%s] (no RRSI)" % addr
+                print "[%s] (no RSSI)" % addr
         else:
             print "unrecognized packet type 0x%02x" % ptype
             print "event ", event
@@ -129,7 +140,6 @@ try:
 except:
     print "error accessing bluetooth device..."
     sys.exit(1)
-
 try:
     mode = read_inquiry_mode(sock)
 except Exception, e:
